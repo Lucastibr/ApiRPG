@@ -4,25 +4,31 @@ using Test.Models;
 using Test.DTO;
 using System.Threading.Tasks;
 using AutoMapper;
+using Test.Data;
 using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace Test.Services
 {
     public class PersonagemService : IPersonagemService
     {
+        //Injeção de dependência
         private readonly IMapper _mapper;
-        public PersonagemService(IMapper mapper)
+        private readonly DataContext _context;
+        public PersonagemService(IMapper mapper, DataContext context)
         {
             _mapper = mapper;
+            _context = context;
         }
         
         public async Task<ServiceResponse<List<GetPersonagemDTO>>> AdicionarPersonagem(AdicionarPersonagemDTO NovoPersonagem)
         {
             ServiceResponse<List<GetPersonagemDTO>> ServiceResponse = new ServiceResponse<List<GetPersonagemDTO>>();
             Personagem personagem = _mapper.Map<Personagem>(NovoPersonagem);
-            personagem.Id = personagens.Max(c => c.Id) + 1;
-            personagens.Add(personagem);
-            ServiceResponse.Data = (personagens.Select(c => _mapper.Map<GetPersonagemDTO>(c))).ToList();
+            
+            await _context.Personagens.AddAsync(personagem);
+            await _context.SaveChangesAsync();
+            ServiceResponse.Data = (_context.Personagens.Select(p => _mapper.Map<GetPersonagemDTO>(p)).ToList());
             return ServiceResponse;
         }
 
@@ -30,13 +36,15 @@ namespace Test.Services
         {
         
            ServiceResponse<GetPersonagemDTO> serviceResponse = new ServiceResponse<GetPersonagemDTO>();
-           serviceResponse.Data = _mapper.Map<GetPersonagemDTO>(personagens.FirstOrDefault(p => p.Id == id));
+           Personagem dbpersonagem = await _context.Personagens.FirstOrDefaultAsync(p => p.Id == id);
+           serviceResponse.Data = _mapper.Map<GetPersonagemDTO>(dbpersonagem);
            return serviceResponse;
         }
         public async Task<ServiceResponse<List<GetPersonagemDTO>>> PegarTodosPersonagens()
         {
             ServiceResponse<List<GetPersonagemDTO>> serviceResponse = new ServiceResponse<List<GetPersonagemDTO>>();
-            serviceResponse.Data = (personagens.Select(c => _mapper.Map<GetPersonagemDTO>(c))).ToList();
+            List<Personagem> dbPersonagens = await _context.Personagens.ToListAsync();
+            serviceResponse.Data = (dbPersonagens.Select(c => _mapper.Map<GetPersonagemDTO>(c))).ToList();
             return serviceResponse;
         }
 
@@ -45,15 +53,18 @@ namespace Test.Services
             ServiceResponse<GetPersonagemDTO> serviceResponse = new ServiceResponse<GetPersonagemDTO>();
             try
             {
-            Personagem personagem = personagens.FirstOrDefault(p => p.Id == atualizarPersonagem.Id);
+            Personagem personagem = await _context.Personagens.FirstOrDefaultAsync(p => p.Id == atualizarPersonagem.Id);
             personagem.Nome = atualizarPersonagem.Nome;
             personagem.Classe =  atualizarPersonagem.Classe;
             personagem.Forca = atualizarPersonagem.Forca;
             personagem.Defesa = atualizarPersonagem.Defesa;
             personagem.Inteligencia = atualizarPersonagem.Inteligencia;
             personagem.PontosDeDano = atualizarPersonagem.PontosDeDano;
+
+            _context.Personagens.Update(personagem);
+            await _context.SaveChangesAsync();
             
-            serviceResponse.Data = _mapper.Map<GetPersonagemDTO>(personagem);
+            serviceResponse.Data = _mapper.Map<GetPersonagemDTO>(personagem);                     
             }
             catch(Exception ex)
             {
@@ -69,10 +80,11 @@ namespace Test.Services
             ServiceResponse<List<GetPersonagemDTO>> serviceResponse = new ServiceResponse<List<GetPersonagemDTO>>();
             try
             {
-                Personagem personagem = personagens.First(p => p.Id == id);
-                personagens.Remove(personagem);
+                Personagem personagem = await _context.Personagens.FirstAsync(p => p.Id == id);
+                _context.Personagens.Remove(personagem);
+                await _context.SaveChangesAsync();
 
-                serviceResponse.Data = (personagens.Select(p => _mapper.Map<GetPersonagemDTO>(p)).ToList());
+                serviceResponse.Data = (_context.Personagens.Select(p => _mapper.Map<GetPersonagemDTO>(p)).ToList());
             }
             catch(Exception ex)
             {

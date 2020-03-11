@@ -3,8 +3,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Test.Services;
 using AutoMapper;
+using Test.Data;
+
+
 
 namespace Test
 {
@@ -20,7 +24,8 @@ namespace Test
         {
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
-            services.AddScoped<IPersonagemService, PersonagemService>();           
+            services.AddScoped<IPersonagemService, PersonagemService>();     
+            services.AddDbContext<DataContext>(c => c.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));      
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
