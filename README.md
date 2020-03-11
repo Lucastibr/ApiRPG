@@ -4,7 +4,6 @@ Api de personagens de RPG, onde você poderá criar seu personagem, e colocar ca
 Todos os métodos já foram criados, ainda faltam algumas correções como métodos assíncronos que serão adicionados no próximo push.
 Usei padrão de repositório, interface, DTO e padrão MVC sem o V pois ainda não trabalhei com as Views.
 
-No próximo push também será definido a base de dados, trabalharei com EF CORE para que todos nossos personagens fiquem no BD, por enquanto,
-ele ainda está em List.
+Começarei a trabalhar com as Views agora, a API está pronta.
 
 (!Está concluído.).
